@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navy English Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Institution Logo -->
+        <img id="mainLogo" style="display: none;" class="institution-logo-header" alt="Logo">
+        <!-- Header Section -->
+        <header class="main-header">
+            <div class="theme-badge">
+                <i class="fas fa-anchor"></i>
+            </div>
+            <h1 class="main-title">Navy English Quiz</h1>
+            <p class="subtitle">Level 1 • Introductions & Greetings • Colombian Navy</p>
+            <div class="unit-info">
+                <span class="badge"><i class="fas fa-signal"></i> Assessment</span>
+                <span class="badge"><i class="fas fa-flag"></i> Armada de Colombia</span>
+                <span class="badge" id="timerBadge" style="background: #e74c3c; color: white; display: none;"><i class="fas fa-clock"></i> <span id="timeRemaining">60:00</span></span>
+            </div>
+        </header>
+
+        <!-- Mode Navigation -->
+        <nav class="mode-navigation">
+            <button class="mode-btn active" data-mode="vocab"><i class="fas fa-book"></i><span>Vocabulary</span></button>
+            <button class="mode-btn" data-mode="grammar"><i class="fas fa-chalkboard-teacher"></i><span>Grammar</span></button>
+            <button class="mode-btn" data-mode="reading"><i class="fas fa-file-alt"></i><span>Reading</span></button>
+            <button class="mode-btn" data-mode="listening"><i class="fas fa-headphones"></i><span>Listening</span></button>
+        </nav>
+
+        <!-- Vocabulary Section -->
+        <section id="view-vocab" class="view-section active">
+            <div class="content-box">
+                <div class="section-header">
+                    <div class="header-left"><i class="fas fa-book"></i><h3>Vocabulary Understanding</h3></div>
+                    <span class="score-badge" id="vocabScore">0/0</span>
+                </div>
+                <div class="instruction-box"><i class="fas fa-info-circle"></i><span>Select the correct option according to the studied vocabulary.</span></div>
+                <div id="vocabQuestionsContainer" class="questions-container"></div>
+            </div>
+        </section>
+
+        <!-- Grammar Section -->
+        <section id="view-grammar" class="view-section">
+            <div class="content-box">
+                <div class="section-header">
+                    <div class="header-left"><i class="fas fa-chalkboard-teacher"></i><h3>Structures Use</h3></div>
+                    <span class="score-badge" id="grammarScore">0/0</span>
+                </div>
+                <div class="instruction-box"><i class="fas fa-info-circle"></i><span>Choose the correct option based on the gramatical structures.</span></div>
+                <div id="grammarQuestionsContainer" class="questions-container"></div>
+            </div>
+        </section>
+
+        <!-- Reading Section -->
+        <section id="view-reading" class="view-section">
+            <div id="readingContainer"></div>
+        </section>
+
+        <!-- Listening Section -->
+        <section id="view-listening" class="view-section">
+            <div id="listeningContainer"></div>
+            <div class="action-buttons" style="margin-top: 2rem;">
+                <button class="btn-primary" id="submitAllBtn">
+                    <i class="fas fa-paper-plane"></i> <span>Submit All Answers</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Desktop Progress Ring -->
+    <div class="progress-container-desktop">
+        <svg class="progress-ring" width="140" height="140">
+            <defs>
+                <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FFD700"/><stop offset="100%" style="stop-color:#FFA500"/>
+                </linearGradient>
+            </defs>
+            <circle class="progress-ring-circle-bg" cx="70" cy="70" r="60"></circle>
+            <circle class="progress-ring-circle" cx="70" cy="70" r="60" id="progressRing"></circle>
+        </svg>
+        <div class="progress-text">
+            <span class="progress-percentage" id="desktopProgressText">0%</span>
+            <span class="progress-label" id="progressLabel">Score</span>
+        </div>
+    </div>
+
+    <div class="mobile-progress-bar">
+        <div class="mobile-progress-fill" id="progressBarFill"></div>
+        <span class="mobile-progress-text" id="mobileProgressText">0%</span>
+    </div>
+
+    <div id="startOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px;">
+        <h2 style="font-size: 2.5em; margin-bottom: 20px;">Navy English Quiz</h2>
+        <p style="font-size: 1.2em; max-width: 600px; margin-bottom: 30px;">This exam is carefully monitored. You have 60 minutes to complete it. You must remain in full-screen mode and avoid switching windows.</p>
+        
+        <!-- Student Info Form (Conditional) -->
+        <div id="studentInfoForm" style="display: none; background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; margin-bottom: 30px; width: 100%; max-width: 450px; text-align: left; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; font-family: 'Montserrat', sans-serif;">Full Name</label>
+                <input type="text" id="studentName" style="width: 100%; padding: 12px; border-radius: 8px; border: none; font-family: inherit; font-size: 1rem;" placeholder="Enter your full name">
+            </div>
+            <div style="margin-bottom: 5px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; font-family: 'Montserrat', sans-serif;">ID Number</label>
+                <input type="text" id="studentID" style="width: 100%; padding: 12px; border-radius: 8px; border: none; font-family: inherit; font-size: 1rem;" placeholder="Enter your ID number">
+            </div>
+        </div>
+
+        <button id="startExamBtn" class="btn-primary" style="font-size: 1.5em; padding: 15px 40px; border: none; border-radius: 8px; cursor: pointer; background: #3498db; color: white;"><i class="fas fa-play"></i> Start Exam</button>
+    </div>
+
+    <div id="terminatedOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px;">
+        <h2 style="font-size: 2.5em; margin-bottom: 20px; color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Exam Terminated</h2>
+        <p id="terminatedMessage" style="font-size: 1.2em; max-width: 600px; margin-bottom: 30px;">Your exam was terminated due to a rule violation.</p>
+    </div>
+
+    <div id="violationOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 10001; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px;">
+        <div style="background: white; color: #2d3748; padding: 40px; border-radius: 20px; max-width: 500px; width: 100%; box-shadow: var(--shadow-xl);">
+            <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #f39c12; margin-bottom: 20px;"></i>
+            <h2 style="font-size: 2em; margin-bottom: 15px; color: #0A2342;">Rule Violation</h2>
+            <p style="font-size: 1.1em; color: #4a5568; margin-bottom: 25px;">You have exited full-screen or switched windows. This is your <strong>only</strong> warning.</p>
+            <p style="font-size: 1em; color: #e74c3c; margin-bottom: 30px; font-weight: 600;">The next violation will result in immediate termination.</p>
+            <button id="closeViolationBtn" class="btn-primary" style="width: 100%; justify-content: center;"><i class="fas fa-redo"></i> I Understand</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="script.js"></script>
+</body>
+</html>
