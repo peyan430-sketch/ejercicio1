@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen – Motores de Combustión Interna</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #14171f;
+    --surface2: #1c2030;
+    --border: #2a2f42;
+    --accent: #e8533a;
+    --accent2: #f0a040;
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --correct: #2ecc71;
+    --wrong: #e74c3c;
+    --info: #4a9eff;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a0a06 0%, #0d0f14 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 400px; height: 200px;
+    background: radial-gradient(ellipse, rgba(232,83,58,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(232,83,58,0.12);
+    border: 1px solid rgba(232,83,58,0.35);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .header h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* TIMER BAR */
+  .timer-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .timer-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .timer-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: 2px;
+  }
+  .timer-display.urgent { color: var(--wrong); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .progress-bar-outer {
+    flex: 1;
+    margin: 0 1.5rem;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
+
+  /* STUDENT FORM */
+  .student-form {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+  }
+  .form-card h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; color: var(--muted); letter-spacing: 0.5px; }
+  .form-group input, .form-group select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+  }
+  .form-group input::placeholder { color: var(--muted); }
+
+  /* SECTIONS */
+  .exam-sections { max-width: 700px; margin: 0 auto; padding: 0 1.5rem 2rem; display: none; }
+
+  .section-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem 1.5rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .section-icon.vocab { background: rgba(232,83,58,0.15); }
+  .section-icon.gram  { background: rgba(240,160,64,0.15); }
+  .section-icon.read  { background: rgba(74,158,255,0.15); }
+  .section-icon.list  { background: rgba(46,204,113,0.15); }
+
+  .section-title { font-weight: 600; font-size: 15px; }
+  .section-meta  { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  .section-body { padding: 1.5rem; }
+
+  /* READING PASSAGE */
+  .reading-passage {
+    background: var(--surface2);
+    border-left: 3px solid var(--info);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #c8ccd8;
+  }
+  .reading-passage strong { color: var(--text); }
+
+  /* LISTENING */
+  .audio-player {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .audio-btn {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.1s;
+    font-size: 14px;
+    color: #fff;
+  }
+  .audio-btn:active { transform: scale(0.93); }
+  .audio-track { font-size: 13px; color: var(--muted); }
+  .audio-track strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+  .audio-text-reveal {
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .audio-text-reveal.shown { color: #c8ccd8; border-color: var(--correct); }
+
+  /* QUESTIONS */
+  .question-block { margin-bottom: 1.4rem; }
+  .question-block:last-child { margin-bottom: 0; }
+
+  .q-text {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 0.8rem;
+    line-height: 1.55;
+  }
+  .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  /* MULTIPLE CHOICE */
+  .options-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .option-item:hover { border-color: var(--accent); background: rgba(232,83,58,0.05); }
+  .option-item.selected { border-color: var(--accent); background: rgba(232,83,58,0.1); }
+  .option-item.correct  { border-color: var(--correct) !important; background: rgba(46,204,113,0.08) !important; }
+  .option-item.wrong    { border-color: var(--wrong) !important;   background: rgba(231,76,60,0.08) !important; }
+  .option-radio {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .option-item.selected .option-radio { border-color: var(--accent); background: var(--accent); }
+  .option-item.correct  .option-radio { border-color: var(--correct); background: var(--correct); }
+  .option-item.wrong    .option-radio { border-color: var(--wrong);   background: var(--wrong); }
+
+  /* TRUE/FALSE */
+  .tf-row { display: flex; gap: 10px; }
+  .tf-btn {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .tf-btn:hover { border-color: var(--info); background: rgba(74,158,255,0.06); }
+  .tf-btn.selected { border-color: var(--info); background: rgba(74,158,255,0.1); }
+  .tf-btn.correct  { border-color: var(--correct) !important; background: rgba(46,204,113,0.1) !important; }
+  .tf-btn.wrong    { border-color: var(--wrong) !important;   background: rgba(231,76,60,0.1) !important; }
+
+  /* FILL IN */
+  .fill-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    padding: 9px 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .fill-input:focus { border-color: var(--accent2); }
+  .fill-input.correct { border-color: var(--correct); }
+  .fill-input.wrong   { border-color: var(--wrong); }
+
+  /* FEEDBACK */
+  .q-feedback {
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    display: none;
+  }
+  .q-feedback.correct { display: block; color: var(--correct); background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25); }
+  .q-feedback.wrong   { display: block; color: var(--wrong);   background: rgba(231,76,60,0.08);  border: 1px solid rgba(231,76,60,0.25); }
+
+  /* DIVIDER */
+  .q-divider { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+
+  /* START / SUBMIT BUTTONS */
+  .btn-start, .btn-submit {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    padding: 14px;
+    letter-spacing: 0.3px;
+  }
+  .btn-start {
+    background: var(--accent);
+    color: #fff;
+    margin-top: 1.5rem;
+  }
+  .btn-submit {
+    background: var(--accent2);
+    color: #0d0f14;
+    margin-top: 0.5rem;
+  }
+  .btn-start:hover, .btn-submit:hover { opacity: 0.88; }
+  .btn-start:active, .btn-submit:active { transform: scale(0.99); }
+
+  /* RESULT PANEL */
+  #result-panel {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 0 1.5rem 3rem;
+    display: none;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+  .result-circle {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    border: 3px solid var(--accent);
+    background: rgba(232,83,58,0.07);
+  }
+  .result-score-num {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .result-score-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .result-title { font-size: 22px; font-weight: 700; margin-bottom: 0.5rem; }
+  .result-sub { color: var(--muted); font-size: 14px; margin-bottom: 1.5rem; }
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .breakdown-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: left;
+  }
+  .breakdown-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .breakdown-val { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .breakdown-val.vocab { color: var(--accent); }
+  .breakdown-val.gram  { color: var(--accent2); }
+  .breakdown-val.read  { color: var(--info); }
+  .breakdown-val.list  { color: var(--correct); }
+  .result-status {
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  .result-status.pass { background: rgba(46,204,113,0.12); color: var(--correct); border: 1px solid rgba(46,204,113,0.3); }
+  .result-status.fail { background: rgba(231,76,60,0.12);  color: var(--wrong);   border: 1px solid rgba(231,76,60,0.3); }
+  .sending-msg { font-size: 13px; color: var(--muted); margin-top: 1rem; min-height: 20px; }
+  .sending-msg.ok { color: var(--correct); }
+  .sending-msg.err { color: var(--wrong); }
+
+  /* MISC */
+  @media (max-width: 520px) {
+    .form-row { grid-template-columns: 1fr; }
+    .result-breakdown { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<div class="header">
+  <div class="badge">EVALUACIÓN TÉCNICA</div>
+  <h1>Motores de <span>Combustión Interna</span></h1>
+  <p>Componentes básicos &nbsp;·&nbsp; 40 preguntas &nbsp;·&nbsp; 45 minutos</p>
+</div>
+
+<!-- ══════════════ TIMER BAR ══════════════ -->
+<div class="timer-bar" id="timer-bar" style="display:none">
+  <span class="timer-label">⏱ TIEMPO RESTANTE</span>
+  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar" style="width:100%"></div></div>
+  <span class="timer-display" id="timer-display">45:00</span>
+</div>
+
+<!-- ══════════════ STUDENT FORM ══════════════ -->
+<div class="student-form" id="student-form">
+  <div class="form-card">
+    <h2>// Datos del estudiante</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>NOMBRE COMPLETO</label>
+        <input type="text" id="inp-name" placeholder="Ej. Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>ID / CÓDIGO</label>
+        <input type="text" id="inp-id" placeholder="Ej. 2024001">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>TIPO DE EXAMEN</label>
+        <select id="inp-test">
+          <option value="Parcial 1">Parcial 1</option>
+          <option value="Parcial 2">Parcial 2</option>
+          <option value="Final">Final</option>
+          <option value="Recuperatorio">Recuperatorio</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startExam()">Iniciar Examen →</button>
+  </div>
+</div>
+
+<!-- ══════════════ EXAM SECTIONS ══════════════ -->
+<div class="exam-sections" id="exam-sections">
+
+  <!-- ─── SECTION 1: VOCABULARY ─── -->
+  <div class="section-block">
+    <div class="section-header">
+      <div class="section-icon vocab">🔩</div>
+      <div>
+        <div class="section-title">Vocabulario Técnico</div>
+      </div>
+      <div class="section-meta">10 preguntas · 25 pts</div>
+    </div>
+    <div class="section-body">
+
+      <!-- Q1 -->
+      <div class="question-block" id="qv1">
+        <div class="q-text"><span class="q-num">V1.</span> ¿Cuál es la función principal del <strong>pistón</strong> en un motor de combustión interna?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv1','A')"><div class="option-radio"></div>Enfriar la mezcla de combustible</li>
+          <li class="option-item" onclick="selectOption(this,'qv1','B')"><div class="option-radio"></div>Transmitir la fuerza de la combustión al cigüeñal a través de la biela</li>
+          <li class="option-item" onclick="selectOption(this,'qv1','C')"><div class="option-radio"></div>Mezclar el combustible con el aceite</li>
+          <li class="option-item" onclick="selectOption(this,'qv1','D')"><div class="option-radio"></div>Controlar la entrada de gases de escape</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv1"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q2 -->
+      <div class="question-block" id="qv2">
+        <div class="q-text"><span class="q-num">V2.</span> El <strong>cigüeñal</strong> convierte el movimiento:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv2','A')"><div class="option-radio"></div>Rotacional en lineal</li>
+          <li class="option-item" onclick="selectOption(this,'qv2','B')"><div class="option-radio"></div>Lineal (alternativo) en rotacional</li>
+          <li class="option-item" onclick="selectOption(this,'qv2','C')"><div class="option-radio"></div>Oscilatorio en eléctrico</li>
+          <li class="option-item" onclick="selectOption(this,'qv2','D')"><div class="option-radio"></div>Rotacional en lineal circular</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv2"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q3 -->
+      <div class="question-block" id="qv3">
+        <div class="q-text"><span class="q-num">V3.</span> ¿Cómo se llama el componente que sella el espacio entre el pistón y las paredes del cilindro?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv3','A')"><div class="option-radio"></div>Válvula de escape</li>
+          <li class="option-item" onclick="selectOption(this,'qv3','B')"><div class="option-radio"></div>Aro / Segmento de pistón</li>
+          <li class="option-item" onclick="selectOption(this,'qv3','C')"><div class="option-radio"></div>Junta de culata</li>
+          <li class="option-item" onclick="selectOption(this,'qv3','D')"><div class="option-radio"></div>Muñequilla</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv3"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q4 -->
+      <div class="question-block" id="qv4">
+        <div class="q-text"><span class="q-num">V4.</span> La <strong>biela</strong> conecta:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv4','A')"><div class="option-radio"></div>El cigüeñal con el árbol de levas</li>
+          <li class="option-item" onclick="selectOption(this,'qv4','B')"><div class="option-radio"></div>El pistón con el cigüeñal</li>
+          <li class="option-item" onclick="selectOption(this,'qv4','C')"><div class="option-radio"></div>La culata con el bloque motor</li>
+          <li class="option-item" onclick="selectOption(this,'qv4','D')"><div class="option-radio"></div>Las válvulas con el árbol de levas directamente</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv4"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q5 -->
+      <div class="question-block" id="qv5">
+        <div class="q-text"><span class="q-num">V5.</span> ¿Qué componente regula el momento de apertura y cierre de las válvulas?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv5','A')"><div class="option-radio"></div>El volante de inercia</li>
+          <li class="option-item" onclick="selectOption(this,'qv5','B')"><div class="option-radio"></div>El árbol de levas (camshaft)</li>
+          <li class="option-item" onclick="selectOption(this,'qv5','C')"><div class="option-radio"></div>La bomba de aceite</li>
+          <li class="option-item" onclick="selectOption(this,'qv5','D')"><div class="option-radio"></div>El carburador</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv5"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q6 -->
+      <div class="question-block" id="qv6">
+        <div class="q-text"><span class="q-num">V6.</span> Selecciona el término correcto: El espacio superior del cilindro donde ocurre la combustión se denomina:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv6','A')"><div class="option-radio"></div>Cámara de combustión</li>
+          <li class="option-item" onclick="selectOption(this,'qv6','B')"><div class="option-radio"></div>Carter de aceite</li>
+          <li class="option-item" onclick="selectOption(this,'qv6','C')"><div class="option-radio"></div>Múltiple de admisión</li>
+          <li class="option-item" onclick="selectOption(this,'qv6','D')"><div class="option-radio"></div>Colector de escape</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv6"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q7 fill-in -->
+      <div class="question-block" id="qv7">
+        <div class="q-text"><span class="q-num">V7.</span> Complete: El <em>volante de inercia</em> se encarga de ______________ el movimiento rotacional del cigüeñal entre ciclos.</div>
+        <input type="text" class="fill-input" id="fill-qv7" placeholder="Escriba la palabra..." oninput="checkFill('qv7',this.value,['suavizar','estabilizar','regularizar','uniformizar'])">
+        <div class="q-feedback" id="fb-qv7"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q8 -->
+      <div class="question-block" id="qv8">
+        <div class="q-text"><span class="q-num">V8.</span> ¿Cuántos tiempos tiene el ciclo Otto convencional?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv8','A')"><div class="option-radio"></div>2</li>
+          <li class="option-item" onclick="selectOption(this,'qv8','B')"><div class="option-radio"></div>3</li>
+          <li class="option-item" onclick="selectOption(this,'qv8','C')"><div class="option-radio"></div>4</li>
+          <li class="option-item" onclick="selectOption(this,'qv8','D')"><div class="option-radio"></div>6</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv8"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q9 -->
+      <div class="question-block" id="qv9">
+        <div class="q-text"><span class="q-num">V9.</span> El <strong>PMI</strong> (Punto Muerto Inferior) es la posición del pistón cuando:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv9','A')"><div class="option-radio"></div>Llega al punto más alto dentro del cilindro</li>
+          <li class="option-item" onclick="selectOption(this,'qv9','B')"><div class="option-radio"></div>Alcanza su posición más baja, maximizando el volumen del cilindro</li>
+          <li class="option-item" onclick="selectOption(this,'qv9','C')"><div class="option-radio"></div>Se detiene durante la compresión</li>
+          <li class="option-item" onclick="selectOption(this,'qv9','D')"><div class="option-radio"></div>Coincide con la apertura de la válvula de escape</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv9"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- Q10 -->
+      <div class="question-block" id="qv10">
+        <div class="q-text"><span class="q-num">V10.</span> ¿Qué nombre recibe la relación entre el volumen total del cilindro y el volumen de la cámara de combustión?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qv10','A')"><div class="option-radio"></div>Relación de transmisión</li>
+          <li class="option-item" onclick="selectOption(this,'qv10','B')"><div class="option-radio"></div>Relación de compresión</li>
+          <li class="option-item" onclick="selectOption(this,'qv10','C')"><div class="option-radio"></div>Relación de expansión volumétrica</li>
+          <li class="option-item" onclick="selectOption(this,'qv10','D')"><div class="option-radio"></div>Coeficiente de llenado</li>
+        </ul>
+        <div class="q-feedback" id="fb-qv10"></div>
+      </div>
+
+    </div>
+  </div><!-- end vocabulary -->
+
+  <!-- ─── SECTION 2: GRAMMAR (Estructuras técnicas) ─── -->
+  <div class="section-block">
+    <div class="section-header">
+      <div class="section-icon gram">⚙️</div>
+      <div>
+        <div class="section-title">Gramática Técnica</div>
+      </div>
+      <div class="section-meta">10 preguntas · 25 pts</div>
+    </div>
+    <div class="section-body">
+
+      <!-- G1 T/F -->
+      <div class="question-block" id="qg1">
+        <div class="q-text"><span class="q-num">G1.</span> Verdadero o Falso: En un motor de 4 tiempos, el cigüeñal gira <strong>dos vueltas</strong> completas por cada ciclo de trabajo.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qg1','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qg1','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qg1"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G2 T/F -->
+      <div class="question-block" id="qg2">
+        <div class="q-text"><span class="q-num">G2.</span> Verdadero o Falso: La culata (tapa de cilindros) forma parte del <strong>bloque motor</strong> y no se puede separar de él.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qg2','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qg2','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qg2"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G3 T/F -->
+      <div class="question-block" id="qg3">
+        <div class="q-text"><span class="q-num">G3.</span> Verdadero o Falso: Los aros de pistón (segmentos) cumplen la función de sellar los gases de la combustión e impedir que el aceite suba a la cámara.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qg3','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qg3','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qg3"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G4 fill -->
+      <div class="question-block" id="qg4">
+        <div class="q-text"><span class="q-num">G4.</span> Complete la oración correctamente: "El sistema de ______________ lubrica las piezas en movimiento para reducir la fricción y el desgaste."</div>
+        <input type="text" class="fill-input" id="fill-qg4" placeholder="Escriba el término..." oninput="checkFill('qg4',this.value,['lubricación','lubrificación','lubricacion','lubrificacion'])">
+        <div class="q-feedback" id="fb-qg4"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G5 -->
+      <div class="question-block" id="qg5">
+        <div class="q-text"><span class="q-num">G5.</span> ¿Cuál de las siguientes afirmaciones sobre el sistema de refrigeración es <strong>correcta</strong>?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qg5','A')"><div class="option-radio"></div>El termostato mantiene el motor siempre a temperatura máxima</li>
+          <li class="option-item" onclick="selectOption(this,'qg5','B')"><div class="option-radio"></div>El refrigerante circula por la camisa de agua del bloque y la culata para disipar el calor</li>
+          <li class="option-item" onclick="selectOption(this,'qg5','C')"><div class="option-radio"></div>El ventilador del radiador enfría directamente los pistones</li>
+          <li class="option-item" onclick="selectOption(this,'qg5','D')"><div class="option-radio"></div>La refrigeración es opcional en motores de gasolina</li>
+        </ul>
+        <div class="q-feedback" id="fb-qg5"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G6 -->
+      <div class="question-block" id="qg6">
+        <div class="q-text"><span class="q-num">G6.</span> Ordena correctamente los 4 tiempos del ciclo Otto: (elige la secuencia correcta)</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qg6','A')"><div class="option-radio"></div>Compresión → Admisión → Expansión → Escape</li>
+          <li class="option-item" onclick="selectOption(this,'qg6','B')"><div class="option-radio"></div>Admisión → Compresión → Expansión (potencia) → Escape</li>
+          <li class="option-item" onclick="selectOption(this,'qg6','C')"><div class="option-radio"></div>Admisión → Expansión → Compresión → Escape</li>
+          <li class="option-item" onclick="selectOption(this,'qg6','D')"><div class="option-radio"></div>Escape → Admisión → Compresión → Expansión</li>
+        </ul>
+        <div class="q-feedback" id="fb-qg6"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G7 T/F -->
+      <div class="question-block" id="qg7">
+        <div class="q-text"><span class="q-num">G7.</span> Verdadero o Falso: En el tiempo de <strong>admisión</strong>, la válvula de escape permanece abierta.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qg7','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qg7','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qg7"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G8 -->
+      <div class="question-block" id="qg8">
+        <div class="q-text"><span class="q-num">G8.</span> La diferencia principal entre un motor <strong>Diesel</strong> y uno de <strong>gasolina</strong> (ciclo Otto) es:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qg8','A')"><div class="option-radio"></div>El Diesel usa bujías para encender la mezcla</li>
+          <li class="option-item" onclick="selectOption(this,'qg8','B')"><div class="option-radio"></div>En el Diesel la ignición se produce por compresión; en el Otto, por chispa eléctrica</li>
+          <li class="option-item" onclick="selectOption(this,'qg8','C')"><div class="option-radio"></div>El motor Otto tiene mayor relación de compresión</li>
+          <li class="option-item" onclick="selectOption(this,'qg8','D')"><div class="option-radio"></div>Ambos motores usan el mismo combustible</li>
+        </ul>
+        <div class="q-feedback" id="fb-qg8"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G9 T/F -->
+      <div class="question-block" id="qg9">
+        <div class="q-text"><span class="q-num">G9.</span> Verdadero o Falso: La <strong>junta de culata</strong> sella la unión entre el bloque motor y la culata, evitando fugas de gases y refrigerante.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qg9','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qg9','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qg9"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- G10 fill -->
+      <div class="question-block" id="qg10">
+        <div class="q-text"><span class="q-num">G10.</span> Complete: "El ______________ regula la temperatura del motor abriéndose cuando el refrigerante alcanza cierta temperatura para permitir su circulación al radiador."</div>
+        <input type="text" class="fill-input" id="fill-qg10" placeholder="Escriba el componente..." oninput="checkFill('qg10',this.value,['termostato','termostatos'])">
+        <div class="q-feedback" id="fb-qg10"></div>
+      </div>
+
+    </div>
+  </div><!-- end grammar -->
+
+  <!-- ─── SECTION 3: READING ─── -->
+  <div class="section-block">
+    <div class="section-header">
+      <div class="section-icon read">📄</div>
+      <div>
+        <div class="section-title">Comprensión de Lectura</div>
+      </div>
+      <div class="section-meta">10 preguntas · 25 pts</div>
+    </div>
+    <div class="section-body">
+      <div class="reading-passage">
+        <strong>Lee el siguiente texto y responde las preguntas:</strong><br><br>
+        El motor de combustión interna de cuatro tiempos es el más utilizado en automóviles de pasajeros. Su funcionamiento se basa en cuatro carreras del pistón: admisión, compresión, expansión y escape. Durante la admisión, el pistón desciende desde el Punto Muerto Superior (PMS) hasta el Punto Muerto Inferior (PMI) mientras la válvula de admisión permanece abierta, permitiendo el ingreso de la mezcla aire-combustible. En la compresión, ambas válvulas se cierran y el pistón asciende, reduciendo el volumen y aumentando la presión y temperatura de la mezcla. Al llegar al PMS, la bujía produce la chispa que enciende la mezcla. La expansión (o tiempo de potencia) es el único tiempo motriz: los gases en combustión empujan el pistón hacia abajo con gran fuerza. Finalmente, durante el escape, la válvula de escape se abre y el pistón asciende expulsando los gases quemados. El sistema de distribución —compuesto por el árbol de levas, las válvulas, los balancines y la cadena o correa de distribución— sincroniza la apertura y cierre de las válvulas con la posición del cigüeñal.
+      </div>
+
+      <!-- R1 -->
+      <div class="question-block" id="qr1">
+        <div class="q-text"><span class="q-num">R1.</span> ¿En cuál de los cuatro tiempos se genera la fuerza que mueve el pistón hacia abajo?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr1','A')"><div class="option-radio"></div>Admisión</li>
+          <li class="option-item" onclick="selectOption(this,'qr1','B')"><div class="option-radio"></div>Compresión</li>
+          <li class="option-item" onclick="selectOption(this,'qr1','C')"><div class="option-radio"></div>Expansión (potencia)</li>
+          <li class="option-item" onclick="selectOption(this,'qr1','D')"><div class="option-radio"></div>Escape</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr1"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R2 -->
+      <div class="question-block" id="qr2">
+        <div class="q-text"><span class="q-num">R2.</span> Según el texto, ¿qué produce la chispa que enciende la mezcla?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr2','A')"><div class="option-radio"></div>La bomba de inyección</li>
+          <li class="option-item" onclick="selectOption(this,'qr2','B')"><div class="option-radio"></div>La bujía</li>
+          <li class="option-item" onclick="selectOption(this,'qr2','C')"><div class="option-radio"></div>El alternador</li>
+          <li class="option-item" onclick="selectOption(this,'qr2','D')"><div class="option-radio"></div>El árbol de levas</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr2"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R3 T/F -->
+      <div class="question-block" id="qr3">
+        <div class="q-text"><span class="q-num">R3.</span> V/F: Según el texto, durante el tiempo de compresión <strong>ambas válvulas están abiertas</strong>.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qr3','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qr3','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qr3"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R4 -->
+      <div class="question-block" id="qr4">
+        <div class="q-text"><span class="q-num">R4.</span> ¿Qué componente sincroniza la apertura y cierre de válvulas con la posición del cigüeñal?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr4','A')"><div class="option-radio"></div>El carburador</li>
+          <li class="option-item" onclick="selectOption(this,'qr4','B')"><div class="option-radio"></div>El sistema de distribución (árbol de levas + cadena/correa)</li>
+          <li class="option-item" onclick="selectOption(this,'qr4','C')"><div class="option-radio"></div>El volante de inercia</li>
+          <li class="option-item" onclick="selectOption(this,'qr4','D')"><div class="option-radio"></div>La bomba de combustible</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr4"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R5 -->
+      <div class="question-block" id="qr5">
+        <div class="q-text"><span class="q-num">R5.</span> Durante la admisión, el pistón se mueve desde:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr5','A')"><div class="option-radio"></div>PMI hacia el PMS</li>
+          <li class="option-item" onclick="selectOption(this,'qr5','B')"><div class="option-radio"></div>PMS hacia el PMI</li>
+          <li class="option-item" onclick="selectOption(this,'qr5','C')"><div class="option-radio"></div>Se mantiene estático en el PMS</li>
+          <li class="option-item" onclick="selectOption(this,'qr5','D')"><div class="option-radio"></div>Gira 90° alrededor del cigüeñal</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr5"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R6 T/F -->
+      <div class="question-block" id="qr6">
+        <div class="q-text"><span class="q-num">R6.</span> V/F: El texto indica que el motor de 4 tiempos es el más utilizado en automóviles de pasajeros.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qr6','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qr6','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qr6"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R7 -->
+      <div class="question-block" id="qr7">
+        <div class="q-text"><span class="q-num">R7.</span> ¿En qué tiempo se expulsan los gases quemados del cilindro?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr7','A')"><div class="option-radio"></div>Admisión</li>
+          <li class="option-item" onclick="selectOption(this,'qr7','B')"><div class="option-radio"></div>Compresión</li>
+          <li class="option-item" onclick="selectOption(this,'qr7','C')"><div class="option-radio"></div>Expansión</li>
+          <li class="option-item" onclick="selectOption(this,'qr7','D')"><div class="option-radio"></div>Escape</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr7"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R8 fill -->
+      <div class="question-block" id="qr8">
+        <div class="q-text"><span class="q-num">R8.</span> Según el texto, en la compresión se reduce el volumen y aumentan la ______________ y la temperatura de la mezcla.</div>
+        <input type="text" class="fill-input" id="fill-qr8" placeholder="Una palabra..." oninput="checkFill('qr8',this.value,['presión','presion'])">
+        <div class="q-feedback" id="fb-qr8"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R9 -->
+      <div class="question-block" id="qr9">
+        <div class="q-text"><span class="q-num">R9.</span> ¿Cuál de los siguientes NO se menciona en el texto como parte del sistema de distribución?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'qr9','A')"><div class="option-radio"></div>Árbol de levas</li>
+          <li class="option-item" onclick="selectOption(this,'qr9','B')"><div class="option-radio"></div>Balancines</li>
+          <li class="option-item" onclick="selectOption(this,'qr9','C')"><div class="option-radio"></div>Pistón</li>
+          <li class="option-item" onclick="selectOption(this,'qr9','D')"><div class="option-radio"></div>Correa de distribución</li>
+        </ul>
+        <div class="q-feedback" id="fb-qr9"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- R10 T/F -->
+      <div class="question-block" id="qr10">
+        <div class="q-text"><span class="q-num">R10.</span> V/F: Durante el escape, la válvula de <strong>admisión</strong> es la que se abre para expulsar los gases.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'qr10','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'qr10','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-qr10"></div>
+      </div>
+
+    </div>
+  </div><!-- end reading -->
+
+  <!-- ─── SECTION 4: LISTENING ─── -->
+  <div class="section-block">
+    <div class="section-header">
+      <div class="section-icon list">🎧</div>
+      <div>
+        <div class="section-title">Comprensión Auditiva</div>
+      </div>
+      <div class="section-meta">10 preguntas · 25 pts</div>
+    </div>
+    <div class="section-body">
+
+      <div class="audio-player">
+        <button class="audio-btn" onclick="toggleAudio()" id="audio-btn">▶</button>
+        <div class="audio-track">
+          <strong>Pista de audio: Descripción de componentes</strong>
+          <span>Haz clic en reproducir para escuchar el texto (simulado) — luego responde las preguntas</span>
+        </div>
+      </div>
+
+      <div class="audio-text-reveal" id="audio-reveal">
+        🎧 <em>El texto de audio aparecerá aquí al reproducirse (simulación para evaluación digital)...</em>
+      </div>
+
+      <!-- L1 -->
+      <div class="question-block" id="ql1">
+        <div class="q-text"><span class="q-num">L1.</span> En el audio, ¿qué función se menciona del <strong>múltiple de admisión</strong>?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql1','A')"><div class="option-radio"></div>Conducir los gases quemados hacia el escape</li>
+          <li class="option-item" onclick="selectOption(this,'ql1','B')"><div class="option-radio"></div>Distribuir la mezcla aire-combustible a los cilindros</li>
+          <li class="option-item" onclick="selectOption(this,'ql1','C')"><div class="option-radio"></div>Enfriar el aceite del motor</li>
+          <li class="option-item" onclick="selectOption(this,'ql1','D')"><div class="option-radio"></div>Filtrar el aire antes del turbo</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql1"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L2 -->
+      <div class="question-block" id="ql2">
+        <div class="q-text"><span class="q-num">L2.</span> Según el audio, ¿qué material es más común para fabricar los pistones modernos?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql2','A')"><div class="option-radio"></div>Hierro fundido</li>
+          <li class="option-item" onclick="selectOption(this,'ql2','B')"><div class="option-radio"></div>Acero inoxidable</li>
+          <li class="option-item" onclick="selectOption(this,'ql2','C')"><div class="option-radio"></div>Aleación de aluminio</li>
+          <li class="option-item" onclick="selectOption(this,'ql2','D')"><div class="option-radio"></div>Titanio reforzado</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql2"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L3 T/F -->
+      <div class="question-block" id="ql3">
+        <div class="q-text"><span class="q-num">L3.</span> V/F: El audio menciona que el <strong>carburador</strong> es el sistema más moderno de inyección de combustible.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'ql3','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'ql3','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-ql3"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L4 -->
+      <div class="question-block" id="ql4">
+        <div class="q-text"><span class="q-num">L4.</span> ¿Cuántos aros (segmentos) suele tener un pistón convencional según el audio?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql4','A')"><div class="option-radio"></div>1</li>
+          <li class="option-item" onclick="selectOption(this,'ql4','B')"><div class="option-radio"></div>2</li>
+          <li class="option-item" onclick="selectOption(this,'ql4','C')"><div class="option-radio"></div>3</li>
+          <li class="option-item" onclick="selectOption(this,'ql4','D')"><div class="option-radio"></div>4</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql4"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L5 -->
+      <div class="question-block" id="ql5">
+        <div class="q-text"><span class="q-num">L5.</span> El audio describe el <strong>bloque motor</strong> como:</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql5','A')"><div class="option-radio"></div>La pieza que contiene los pistones y es la estructura principal del motor</li>
+          <li class="option-item" onclick="selectOption(this,'ql5','B')"><div class="option-radio"></div>El componente que controla la ignición</li>
+          <li class="option-item" onclick="selectOption(this,'ql5','C')"><div class="option-radio"></div>El sistema de filtrado de aceite</li>
+          <li class="option-item" onclick="selectOption(this,'ql5','D')"><div class="option-radio"></div>La tapa que sella la parte superior del motor</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql5"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L6 T/F -->
+      <div class="question-block" id="ql6">
+        <div class="q-text"><span class="q-num">L6.</span> V/F: Según el audio, la <strong>bomba de agua</strong> forma parte del sistema de refrigeración del motor.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'ql6','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'ql6','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-ql6"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L7 fill -->
+      <div class="question-block" id="ql7">
+        <div class="q-text"><span class="q-num">L7.</span> Complete según el audio: "El eje o muñequilla en la biela es el punto de ______________ entre la biela y el cigüeñal."</div>
+        <input type="text" class="fill-input" id="fill-ql7" placeholder="Una palabra..." oninput="checkFill('ql7',this.value,['articulación','union','unión','conexión','conexion','pivote'])">
+        <div class="q-feedback" id="fb-ql7"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L8 -->
+      <div class="question-block" id="ql8">
+        <div class="q-text"><span class="q-num">L8.</span> ¿A qué se refiere el término <strong>"cilindrada"</strong> según el audio?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql8','A')"><div class="option-radio"></div>La velocidad máxima del motor en RPM</li>
+          <li class="option-item" onclick="selectOption(this,'ql8','B')"><div class="option-radio"></div>El volumen total barrido por todos los pistones en un ciclo completo</li>
+          <li class="option-item" onclick="selectOption(this,'ql8','C')"><div class="option-radio"></div>El número de cilindros del motor</li>
+          <li class="option-item" onclick="selectOption(this,'ql8','D')"><div class="option-radio"></div>La temperatura de operación normal</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql8"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L9 T/F -->
+      <div class="question-block" id="ql9">
+        <div class="q-text"><span class="q-num">L9.</span> V/F: El audio afirma que un motor con mayor cilindrada genera <strong>siempre</strong> mayor potencia que uno con menor cilindrada.</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="selectTF(this,'ql9','V')">✓ Verdadero</button>
+          <button class="tf-btn" onclick="selectTF(this,'ql9','F')">✗ Falso</button>
+        </div>
+        <div class="q-feedback" id="fb-ql9"></div>
+      </div>
+      <hr class="q-divider">
+
+      <!-- L10 -->
+      <div class="question-block" id="ql10">
+        <div class="q-text"><span class="q-num">L10.</span> Según el audio, ¿cuál es la función del <strong>colector de escape</strong>?</div>
+        <ul class="options-list">
+          <li class="option-item" onclick="selectOption(this,'ql10','A')"><div class="option-radio"></div>Recircular los gases quemados hacia la admisión</li>
+          <li class="option-item" onclick="selectOption(this,'ql10','B')"><div class="option-radio"></div>Recolectar los gases de escape de los cilindros y conducirlos fuera del motor</li>
+          <li class="option-item" onclick="selectOption(this,'ql10','C')"><div class="option-radio"></div>Enfriar los gases antes de su expulsión</li>
+          <li class="option-item" onclick="selectOption(this,'ql10','D')"><div class="option-radio"></div>Medir la temperatura de los gases de combustión</li>
+        </ul>
+        <div class="q-feedback" id="fb-ql10"></div>
+      </div>
+
+    </div>
+  </div><!-- end listening -->
+
+  <!-- URL input and Submit -->
+  <div class="section-block">
+    <div class="section-body">
+      <div class="form-group" style="margin-bottom:1.2rem">
+        <label style="font-size:12px; color:var(--muted);">URL DEL GOOGLE APPS SCRIPT (doPost)</label>
+        <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/..." style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:10px 14px;width:100%;outline:none;">
+      </div>
+      <button class="btn-submit" onclick="submitExam()">📊 Finalizar y Enviar Resultados</button>
+    </div>
+  </div>
+
+</div><!-- end exam-sections -->
+
+<!-- ══════════════ RESULT PANEL ══════════════ -->
+<div id="result-panel">
+  <div class="result-card">
+    <div class="result-circle">
+      <div class="result-score-num" id="res-score">--</div>
+      <div class="result-score-label">/ 100</div>
+    </div>
+    <div class="result-title" id="res-title">Examen Completado</div>
+    <div class="result-sub" id="res-name">—</div>
+    <div class="result-status" id="res-status"></div>
+    <div class="result-breakdown">
+      <div class="breakdown-item"><div class="breakdown-label">Vocabulario</div><div class="breakdown-val vocab" id="bd-vocab">—</div></div>
+      <div class="breakdown-item"><div class="breakdown-label">Gramática</div><div class="breakdown-val gram" id="bd-gram">—</div></div>
+      <div class="breakdown-item"><div class="breakdown-label">Lectura</div><div class="breakdown-val read" id="bd-read">—</div></div>
+      <div class="breakdown-item"><div class="breakdown-label">Escucha</div><div class="breakdown-val list" id="bd-list">—</div></div>
+    </div>
+    <div class="breakdown-item" style="margin-bottom:1rem">
+      <div class="breakdown-label">Tiempo Utilizado</div>
+      <div class="breakdown-val" id="bd-time" style="color:var(--accent2)">—</div>
+    </div>
+    <div class="sending-msg" id="sending-msg">Enviando datos a la hoja de cálculo...</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// ANSWER KEY
+// ═══════════════════════════════
+const ANSWERS = {
+  qv1:'B', qv2:'B', qv3:'B', qv4:'B', qv5:'B',
+  qv6:'A', qv8:'C', qv9:'B', qv10:'B',
+  qg1:'V', qg2:'F', qg3:'V', qg5:'B', qg6:'B',
+  qg7:'F', qg8:'B', qg9:'V',
+  qr1:'C', qr2:'B', qr3:'F', qr4:'B', qr5:'B',
+  qr6:'V', qr7:'D', qr9:'C', qr10:'F',
+  ql1:'B', ql2:'C', ql3:'F', ql4:'C', ql5:'A',
+  ql6:'V', ql8:'B', ql9:'F', ql10:'B'
+};
+// fill-in keys (qv7,qg4,qg10,qr8,ql7) handled inline
+
+const FILL_CORRECT = {
+  qv7:['suavizar','estabilizar','regularizar','uniformizar'],
+  qg4:['lubricación','lubrificación','lubricacion','lubrificacion'],
+  qg10:['termostato'],
+  qr8:['presión','presion'],
+  ql7:['articulación','union','unión','conexión','conexion','pivote']
+};
+
+let studentData = {};
+let timerInterval = null;
+let totalSeconds = 45 * 60;
+let elapsedSeconds = 0;
+let examStarted = false;
+
+// ═══════════════════════════════
+// OPTION SELECTION
+// ═══════════════════════════════
+function selectOption(el, qid, val) {
+  if (!examStarted) return;
+  const block = document.getElementById(qid);
+  block.querySelectorAll('.option-item').forEach(o => o.classList.remove('selected','correct','wrong'));
+  el.classList.add('selected');
+  el.dataset.value = val;
+  block.dataset.answer = val;
+}
+
+function selectTF(el, qid, val) {
+  if (!examStarted) return;
+  const block = document.getElementById(qid);
+  block.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('selected','correct','wrong'));
+  el.classList.add('selected');
+  block.dataset.answer = val;
+}
+
+function checkFill(qid, val, accepted) {
+  if (!examStarted) return;
+  const block = document.getElementById(qid);
+  block.dataset.answer = val.trim().toLowerCase();
+}
+
+// ═══════════════════════════════
+// TIMER
+// ═══════════════════════════════
+function startTimer() {
+  const disp = document.getElementById('timer-display');
+  const bar  = document.getElementById('progress-bar');
+  timerInterval = setInterval(() => {
+    elapsedSeconds++;
+    const remaining = totalSeconds - elapsedSeconds;
+    if (remaining <= 0) { clearInterval(timerInterval); submitExam(); return; }
+    const m = Math.floor(remaining/60).toString().padStart(2,'0');
+    const s = (remaining%60).toString().padStart(2,'0');
+    disp.textContent = m+':'+s;
+    bar.style.width = (remaining/totalSeconds*100).toFixed(1)+'%';
+    if (remaining <= 300) disp.classList.add('urgent');
+  }, 1000);
+}
+
+// ═══════════════════════════════
+// AUDIO SIMULATE
+// ═══════════════════════════════
+const AUDIO_SCRIPT = `[TRANSCRIPCIÓN DE AUDIO — Motores de Combustión Interna]
+
+El múltiple de admisión tiene la función de distribuir la mezcla aire-combustible a cada uno de los cilindros del motor de manera uniforme. Los pistones modernos se fabrican principalmente en aleación de aluminio por su ligereza y buena conductividad térmica. El carburador es un sistema ANTIGUO de mezcla de combustible; hoy en día los motores usan inyección electrónica de combustible. Un pistón convencional lleva 3 aros: dos de compresión y uno de engrase (aceite). El bloque motor es la pieza principal que aloja los cilindros donde se mueven los pistones, y sobre él se montan todos los demás componentes. La bomba de agua hace circular el refrigerante por el motor, por lo que es parte esencial del sistema de refrigeración. La unión entre la biela y el cigüeñal se realiza mediante la muñequilla o codo del cigüeñal; el punto de articulación entre biela y pistón es el bulón. La cilindrada es el volumen total barrido por todos los pistones en un ciclo completo. Mayor cilindrada no SIEMPRE garantiza mayor potencia, ya que influyen otros factores como la sobrealimentación o la eficiencia volumétrica. El colector de escape recoge los gases quemados de todos los cilindros y los conduce hacia el sistema de escape del vehículo.`;
+
+let audioPlaying = false;
+function toggleAudio() {
+  const btn = document.getElementById('audio-btn');
+  const reveal = document.getElementById('audio-reveal');
+  if (!audioPlaying) {
+    audioPlaying = true;
+    btn.textContent = '⏸';
+    reveal.classList.add('shown');
+    reveal.textContent = AUDIO_SCRIPT;
+  } else {
+    audioPlaying = false;
+    btn.textContent = '▶';
+  }
+}
+
+// ═══════════════════════════════
+// START EXAM
+// ═══════════════════════════════
+function startExam() {
+  const name  = document.getElementById('inp-name').value.trim();
+  const id    = document.getElementById('inp-id').value.trim();
+  const test  = document.getElementById('inp-test').value;
+  if (!name || !id) { alert('Por favor, ingresa tu nombre y código antes de iniciar.'); return; }
+  studentData = { name, id, test };
+  document.getElementById('student-form').style.display = 'none';
+  document.getElementById('exam-sections').style.display = 'block';
+  document.getElementById('timer-bar').style.display = 'flex';
+  examStarted = true;
+  startTimer();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════
+// GRADE
+// ═══════════════════════════════
+function grade() {
+  let vocab=0, gram=0, read=0, list=0;
+  const TOTAL_PER = 10; // 10 questions each, 2.5 pts each → 25 per section
+
+  // Grade MC/TF
+  ['qv1','qv2','qv3','qv4','qv5','qv6','qv8','qv9','qv10',
+   'qg1','qg2','qg3','qg5','qg6','qg7','qg8','qg9',
+   'qr1','qr2','qr3','qr4','qr5','qr6','qr7','qr9','qr10',
+   'ql1','ql2','ql3','ql4','ql5','ql6','ql8','ql9','ql10'].forEach(qid => {
+    const block = document.getElementById(qid);
+    const given = block.dataset.answer || '';
+    const correct = ANSWERS[qid];
+    const section = qid[1];
+    const isRight = given === correct;
+
+    // Visual feedback
+    if (qid.includes('qg1')||qid.includes('qg2')||qid.includes('qg3')||qid.includes('qg7')||qid.includes('qg9')||
+        qid.includes('qr3')||qid.includes('qr6')||qid.includes('qr10')||
+        qid.includes('ql3')||qid.includes('ql6')||qid.includes('ql9')) {
+      // TF
+      block.querySelectorAll('.tf-btn').forEach(b => {
+        const bv = b.onclick.toString().includes("'V'") ? 'V' : 'F';
+        if (bv === correct) b.classList.add('correct');
+        else if (bv === given) b.classList.add('wrong');
+      });
+    } else {
+      block.querySelectorAll('.option-item').forEach(opt => {
+        const ov = opt.getAttribute('onclick').match(/'([A-D])'\)/)[1];
+        if (ov === correct) opt.classList.add('correct');
+        else if (ov === given && !isRight) opt.classList.add('wrong');
+      });
+    }
+
+    const fb = document.getElementById('fb-'+qid);
+    if (isRight) {
+      fb.textContent = '✓ Correcto';
+      fb.className = 'q-feedback correct';
+    } else {
+      fb.textContent = given ? '✗ Incorrecto. Respuesta correcta: ' + correct : '✗ Sin respuesta. Correcta: ' + correct;
+      fb.className = 'q-feedback wrong';
+    }
+
+    const pts = isRight ? 2.5 : 0;
+    if (section === 'v') vocab += pts;
+    else if (section === 'g') gram += pts;
+    else if (section === 'r') read += pts;
+    else if (section === 'l') list += pts;
+  });
+
+  // Grade fill-ins
+  Object.keys(FILL_CORRECT).forEach(qid => {
+    const block = document.getElementById(qid);
+    const inp = document.getElementById('fill-'+qid);
+    const given = (inp ? inp.value.trim().toLowerCase() : '') || (block.dataset.answer || '');
+    const accepted = FILL_CORRECT[qid];
+    const isRight = accepted.includes(given);
+    if (inp) inp.classList.add(isRight?'correct':'wrong');
+    const fb = document.getElementById('fb-'+qid);
+    fb.textContent = isRight ? '✓ Correcto' : ('✗ Incorrecto. Correcta: ' + accepted[0]);
+    fb.className = 'q-feedback ' + (isRight ? 'correct' : 'wrong');
+    const pts = isRight ? 2.5 : 0;
+    const section = qid[1];
+    if (section === 'v') vocab += pts;
+    else if (section === 'g') gram += pts;
+    else if (section === 'r') read += pts;
+    else if (section === 'l') list += pts;
+  });
+
+  const total = Math.round(vocab + gram + read + list);
+  return { vocab: Math.round(vocab), gram: Math.round(gram), read: Math.round(read), list: Math.round(list), total };
+}
+
+// ═══════════════════════════════
+// SUBMIT
+// ═══════════════════════════════
+function submitExam() {
+  clearInterval(timerInterval);
+  examStarted = false;
+
+  const scores = grade();
+  const timeUsed = elapsedSeconds;
+  const mm = Math.floor(timeUsed/60).toString().padStart(2,'0');
+  const ss = (timeUsed%60).toString().padStart(2,'0');
+  const timeStr = mm + ':' + ss;
+
+  // Show result
+  document.getElementById('exam-sections').style.display = 'none';
+  document.getElementById('timer-bar').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'block';
+
+  document.getElementById('res-score').textContent = scores.total;
+  document.getElementById('res-name').textContent = studentData.name + ' · ID: ' + studentData.id + ' · ' + studentData.test;
+  document.getElementById('res-title').textContent = scores.total >= 60 ? '¡Examen Aprobado!' : 'Examen No Aprobado';
+  const st = document.getElementById('res-status');
+  st.textContent = scores.total >= 60 ? '✓ APROBADO' : '✗ REPROBADO';
+  st.className = 'result-status ' + (scores.total >= 60 ? 'pass' : 'fail');
+
+  document.getElementById('bd-vocab').textContent = scores.vocab + '/25';
+  document.getElementById('bd-gram').textContent  = scores.gram  + '/25';
+  document.getElementById('bd-read').textContent  = scores.read  + '/25';
+  document.getElementById('bd-list').textContent  = scores.list  + '/25';
+  document.getElementById('bd-time').textContent  = timeStr;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // Send to Google Sheets
+  const scriptUrl = document.getElementById('script-url').value.trim();
+  const report = {
+    name:       studentData.name,
+    ID:         studentData.id,
+    test:       studentData.test,
+    score:      scores.total,
+    time:       timeStr,
+    vocabulary: scores.vocab,
+    grammar:    scores.gram,
+    reading:    scores.read,
+    listening:  scores.list,
+    _recipient: 'peyan430@gmail.com',
+    _subject:   'Resultado Examen MCI – ' + studentData.name
+  };
+
+  const msg = document.getElementById('sending-msg');
+  if (!scriptUrl) {
+    msg.textContent = '⚠ No se ingresó URL del script. Datos no enviados.';
+    msg.className = 'sending-msg err';
+    return;
+  }
+
+  msg.textContent = '⏳ Enviando resultados...';
+  msg.className = 'sending-msg';
+
+  const fd = new FormData();
+  fd.append('report', JSON.stringify(report));
+
+  fetch(scriptUrl, { method: 'POST', body: fd })
+    .then(r => r.text())
+    .then(t => {
+      if (t.includes('Success') || t === 'Success') {
+        msg.textContent = '✅ Resultados enviados correctamente a la hoja de cálculo.';
+        msg.className = 'sending-msg ok';
+      } else {
+        msg.textContent = '⚠ Respuesta del servidor: ' + t;
+        msg.className = 'sending-msg err';
+      }
+    })
+    .catch(err => {
+      msg.textContent = '✗ Error al enviar: ' + err.message;
+      msg.className = 'sending-msg err';
+    });
+}
+</script>
+</body>
+</html>
